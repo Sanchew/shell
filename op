@@ -1,0 +1,29 @@
+#!/bin/sh
+openproj(){
+ files=`find ~/Developer -name *.$1`
+ 
+ while read proj
+ do
+  if [ "$proj"x == x ];then
+   continue
+  fi
+  match_name=`basename $proj`
+  match_name=${match_name%.$1}
+  if [ "$match_name"x != projectx ] && [ "$match_name"x != playgroundx ];then
+    # echo $match_name $proj
+    dirname=`dirname "$proj"`
+    dirname=${dirname##*/}
+    # echo $dirname
+    if [[ $dirname == *$2* ]];then
+     open $proj
+     exit 0
+    fi
+  fi
+ done <<EOF
+$files
+EOF
+}
+
+openproj xcworkspace $1
+openproj xcodeproj $1
+#open ~/Developer/stylewe-ios-$1/StyleWe.xcworkspace
