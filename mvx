@@ -1,0 +1,7 @@
+#!/usr/bin/ruby
+
+mapping = File.new("/Users/clearlove/map.mk")
+
+mapping.each do |row|
+ system row
+end

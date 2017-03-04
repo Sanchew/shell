@@ -1,0 +1,46 @@
+#!/bin/sh
+
+base=`pwd`
+
+# xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWeX archive -archivePath build/target.dev.xcarchive -sdk iphoneos10.2 -configuration Release CONFIGUTATION_BUILD_DIR='build'
+# xcodebuild -exportArchive -exportFormat IPA -archivePath build/target.pro.xcarchive/ -exportPath ./build/StyleWe.dev.ipa -exportProvisioningProfile "XC iOS Ad Hoc: com.stylewe.StyleWeShopping"
+
+version=`defaults read $base/StyleWe/Info.plist CFBundleShortVersionString`
+
+echo '开始上传debug包'
+scp -P32770 ./build/StyleWe.dev.ipa root@192.168.2.247:~/StyleWe.ipa
+
+getopts "r" opt
+if [ $opt = "?" ] ; then
+ exit
+fi
+ 
+# xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe archive -archivePath build/target.pro.xcarchive -sdk iphoneos10.2 -configuration Release CONFIGUTATION_BUILD_DIR='build'
+# xcodebuild -exportArchive -exportFormat IPA -archivePath build/target.pro.xcarchive/ -exportPath ./build/StyleWe.pro.ipa -exportProvisioningProfile "XC iOS Ad Hoc: com.stylewe.StyleWeShopping"
+
+echo '开始上传pro包'
+scp -P32770 ./build/StyleWe.pro.ipa root@192.168.2.247:~/output/StyleWe.$version.pro.ipa
+ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
+
+echo '开始上传dev包'
+scp -P32770 ./build/StyleWe.dev.ipa root@192.168.2.247:~/output/StyleWe.$version.dev.ipa
+ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
+
+echo '生成manifest中'
+
+evs=("pro" "dev")
+for e in ${evs[*]}
+do
+ manifestPath="~Developer/fuckApp/manifest.$version.$e.plist"
+ cp ~/Developer/fuckApp/manifest.plist $manifestPath
+ sed -i "s/>[0-9]\.[0-9]\.[0-9]/>$version/" $manifestPath
+ sed -i "s/StyleWe.ipa/output\/StyleWe.$version.$e.ipa/" $manifestPath
+done
+
+cd ~/Developer/fuckApp
+
+git add *
+git commit -am "release $version manifest"
+git push
+
+echo '打包完成'

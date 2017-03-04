@@ -1,0 +1,5 @@
+#!/bin/bash
+#xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe -configuration Release CONFIGURATION_BUILD_DIR='build'
+#time xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe clean build CONFIGURATION_BUILD_DIR='build' OTHER_SWIFT_FLAGS="-Xfrontend -debug-time-function-bodies" >> analyzer
+time xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe clean build OTHER_SWIFT_FLAGS="-Xfrontend -debug-time-function-bodies" >> analyzer
+cat analyzer | grep [0-9]ms | grep -v ^0. | grep -v /Pods/ | awk '{s[$2]+=$1}END{for(i in s) printf("%2.1dms\t%s\n",s[i],i)}' | sort -nr

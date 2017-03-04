@@ -1,0 +1,7 @@
+#!/bin/sh
+evs=("pro" "dev")
+echo fuck
+for e in ${evs[*]} 
+do
+ echo $e
+done

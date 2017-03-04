@@ -1,0 +1,7 @@
+#!/bin/bash
+#xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe -configuration Release CONFIGURATION_BUILD_DIR='build'
+#time xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe clean build CONFIGURATION_BUILD_DIR='build' OTHER_SWIFT_FLAGS="-Xfrontend -debug-time-function-bodies" >> analyzer
+time xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe clean build OTHER_SWIFT_FLAGS="-Xfrontend -debug-time-function-bodies" >> analyzer
+cat analyzer | grep [0-9]ms | grep -v ^0. | grep -v /Pods/ | awk '{s[$2]+=$1}END{for(i in s) printf("%2.1dms\t%s\n",s[i],i)}' | sort -nr
+# xcodebuild -workspace StyleWe.xcworkspace -scheme StyleWe clean build -configuration Release -sdk iphoneos CONFIGURATION_BUILD_DIR='build'
+# set -o pipefail && xcodebuild -workspace ./MyApp.xcworkspace -scheme MyApp -destination 'generic/platform=iOS' -archivePath '/Users/me/Library/Developer/Xcode/Archives/2016-06-14/MyApp 2016-06-14 00.05.57.xcarchive' archive | tee /Users/me/Library/Logs/gym/MyApp-MyApp.log
