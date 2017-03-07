@@ -34,13 +34,13 @@ pod install
 
 xcodebuild -workspace $AppName.xcworkspace -scheme $AppName archive -archivePath build/target.dev.xcarchive -sdk iphoneos10.2 -configuration Debug CONFIGUTATION_BUILD_DIR='build'
 writeExportPlist $exportOptionsPlistPath ad-hoc
-xcodebuild -exportArchive -archivePath ./build/target.dev.xcarchive/ -exportPath ./build/$AppName.dev.ipa -exportOptionsPlist "$exportOptionsPlistPath"
+xcodebuild -exportArchive -archivePath ./build/target.dev.xcarchive/ -exportPath ./build/dev -exportOptionsPlist "$exportOptionsPlistPath"
 rm $exportOptionsPlistPath
 
 version=`defaults read $base/$AppName/Info.plist CFBundleShortVersionString`
 
 echo '开始上传debug包'
-sshpass -p 'root' scp -P32770 ./build/$AppName.dev.ipa root@192.168.2.247:~/$AppName.ipa
+sshpass -p 'root' scp -P32770 ./build/dev/$AppName.ipa root@192.168.2.247:~/$AppName.ipa
 
 getopts "r" opt
 if [ $opt = "?" ] ; then
@@ -50,16 +50,16 @@ fi
  
 xcodebuild -workspace $AppName.xcworkspace -scheme $AppName archive -archivePath build/target.pro.xcarchive -sdk iphoneos10.2 -configuration Release CONFIGUTATION_BUILD_DIR='build'
 writeExportPlist $exportOptionsPlistPath ad-hoc
-xcodebuild -exportArchive -archivePath ./build/target.pro.xcarchive/ -exportPath ./build/$AppName.pro.ipa -exportOptionsPlist "$exportOptionsPlistPath"
+xcodebuild -exportArchive -archivePath ./build/target.pro.xcarchive/ -exportPath ./build/pro -exportOptionsPlist "$exportOptionsPlistPath"
 rm $exportOptionsPlistPath
 
 echo '开始上传pro包'
-sshpass -p 'root' scp -P32770 ./build/$AppName.pro.ipa root@192.168.2.247:~/output/$AppName.$version.pro.ipa
+sshpass -p 'root' scp -P32770 ./build/pro/$AppName.ipa root@192.168.2.247:~/output/$AppName.$version.pro.ipa
 echo '执行pro包发部脚本'
 sshpass -p 'root' ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
 
 echo '开始上传dev包'
-sshpass -p 'root' scp -P32770 ./build/$AppName.dev.ipa root@192.168.2.247:~/output/$AppName.$version.dev.ipa
+sshpass -p 'root' scp -P32770 ./build/dev/$AppName.ipa root@192.168.2.247:~/output/$AppName.$version.dev.ipa
 echo '执行dev包发部脚本'
 sshpass -p 'root' ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
 
