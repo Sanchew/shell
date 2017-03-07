@@ -1,7 +1,14 @@
 #!/bin/sh
-evs=("pro" "dev")
-echo fuck
-for e in ${evs[*]} 
-do
- echo $e
-done
+
+echo $1
+echo $2
+echo $#
+echo $*
+
+#(
+#cat <<EOF
+#<html>
+#yes
+#</html>
+#EOF
+#) >> fuck

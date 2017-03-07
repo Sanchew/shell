@@ -1,40 +1,77 @@
 #!/bin/sh
 
-base=`pwd`
+writeExportPlist(){
+(
+cat <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>compileBitcode</key>
+    <true/>
+    <key>method</key>
+    <string>$2</string>
+</dict>
+</plist>
+EOF
+) > $1
+}
 
-# xcodebuild -workspace $AppName.xcworkspace -scheme "$AppName"X archive -archivePath build/target.dev.xcarchive -sdk iphoneos10.2 -configuration Release CONFIGUTATION_BUILD_DIR='build'
-# xcodebuild -exportArchive -exportFormat IPA -archivePath build/target.pro.xcarchive/ -exportPath ./build/$AppName.dev.ipa -exportProvisioningProfile $AdHocProvisioningProfile
+home='/Users/clearlove'
+base=`pwd`
+projectName=`ls | grep xcodeproj`
+AppName=${projectName%.*}
+exportOptionsPlistPath='./build/exportOptions.plist'
+
+
+if [ -z "$AppName" ]; then
+ exit
+fi
+
+rm -rf build
+
+pod install
+
+xcodebuild -workspace $AppName.xcworkspace -scheme $AppName archive -archivePath build/target.dev.xcarchive -sdk iphoneos10.2 -configuration Debug CONFIGUTATION_BUILD_DIR='build'
+writeExportPlist $exportOptionsPlistPath ad-hoc
+xcodebuild -exportArchive -archivePath ./build/target.dev.xcarchive/ -exportPath ./build/$AppName.dev.ipa -exportOptionsPlist "$exportOptionsPlistPath"
+rm $exportOptionsPlistPath
 
 version=`defaults read $base/$AppName/Info.plist CFBundleShortVersionString`
 
 echo '开始上传debug包'
-scp -P32770 ./build/$AppName.dev.ipa root@192.168.2.247:~/$AppName.ipa
+sshpass -p 'root' scp -P32770 ./build/$AppName.dev.ipa root@192.168.2.247:~/$AppName.ipa
 
 getopts "r" opt
 if [ $opt = "?" ] ; then
+ echo 'debug包部署完成'
  exit
 fi
  
-# xcodebuild -workspace $AppName.xcworkspace -scheme $AppName archive -archivePath build/target.pro.xcarchive -sdk iphoneos10.2 -configuration Release CONFIGUTATION_BUILD_DIR='build'
-# xcodebuild -exportArchive -exportFormat IPA -archivePath build/target.pro.xcarchive/ -exportPath ./build/$AppName.pro.ipa -exportProvisioningProfile $AdHocProvisioningProfile
+xcodebuild -workspace $AppName.xcworkspace -scheme $AppName archive -archivePath build/target.pro.xcarchive -sdk iphoneos10.2 -configuration Release CONFIGUTATION_BUILD_DIR='build'
+writeExportPlist $exportOptionsPlistPath ad-hoc
+xcodebuild -exportArchive -archivePath ./build/target.pro.xcarchive/ -exportPath ./build/$AppName.pro.ipa -exportOptionsPlist "$exportOptionsPlistPath"
+rm $exportOptionsPlistPath
 
 echo '开始上传pro包'
-scp -P32770 ./build/$AppName.pro.ipa root@192.168.2.247:~/output/$AppName.$version.pro.ipa
-ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
+sshpass -p 'root' scp -P32770 ./build/$AppName.pro.ipa root@192.168.2.247:~/output/$AppName.$version.pro.ipa
+echo '执行pro包发部脚本'
+sshpass -p 'root' ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
 
 echo '开始上传dev包'
-scp -P32770 ./build/$AppName.dev.ipa root@192.168.2.247:~/output/$AppName.$version.dev.ipa
-ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
+sshpass -p 'root' scp -P32770 ./build/$AppName.dev.ipa root@192.168.2.247:~/output/$AppName.$version.dev.ipa
+echo '执行dev包发部脚本'
+sshpass -p 'root' ssh -t -p32770 root@192.168.2.247 "./deploy.sh"
 
 echo '生成manifest中'
 
 evs=("pro" "dev")
 for e in ${evs[*]}
 do
- manifestPath="~Developer/fuckApp/manifest.$version.$e.plist"
+ manifestPath="$home/Developer/fuckApp/manifest.$version.$e.plist"
  cp ~/Developer/fuckApp/manifest.plist $manifestPath
- sed -i "s/>[0-9]\.[0-9]\.[0-9]/>$version/" $manifestPath
- sed -i "s/$AppName.ipa/output\/$AppName.$version.$e.ipa/" $manifestPath
+ sed -i '' "s/>[0-9]\.[0-9]\.[0-9]/>$version/" $manifestPath
+ sed -i '' "s/$AppName.ipa/output\/$AppName.$version.$e.ipa/" $manifestPath
 done
 
 cd ~/Developer/fuckApp
@@ -44,3 +81,4 @@ git commit -am "release $version manifest"
 git push
 
 echo '打包完成'
+
