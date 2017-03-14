@@ -1,0 +1,23 @@
+#!/bin/sh
+
+dir=`pwd`
+
+remove=false
+
+getopts "r" opt
+if [ $opt = "r" ] ; then 
+ remove=true
+fi
+files=`find $dir \( -name '*.[mh]' -o -name '*.swift' \) -not -path "$dir/Pods*"`
+
+while read file
+do
+ match_name=`basename $file`
+ if ! grep -sqh "$match_name" "./JustFashionNow.xcodeproj/project.pbxproj";then 
+  echo $match_name
+  rm $file
+ fi
+done <<EOF
+$files
+EOF
+

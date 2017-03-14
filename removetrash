@@ -1,0 +1,19 @@
+#!/bin/sh
+
+dir=`pwd`
+
+files=`find $dir \( -name '*.[mh]' -o -name '*.swift' \) -not -path "$dir/Pods*"`
+
+while read file 
+do
+sed -i '' '/AFTracker/d' $file
+sed -i '' '/GATracker/d' $file
+sed -i '' '/ADTracker/d' $file
+sed -i '' '/Criteo/d' $file
+sed -i '' '/FBTracker/d' $file
+sed -i '' '/entrance_name/d' $file
+sed -i '' '/AppsFlyerTracker/d' $file
+done <<EOF
+$files
+EOF
+
