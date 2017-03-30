@@ -8,7 +8,7 @@ getopts "r" opt
 if [ $opt = "r" ] ; then 
  remove=true
 fi
-files=`find $dir \( -name '*.xib' -o -name '*.storyboard' -o -name '*.[mh]' -o -name '*.pch' -o -name '*.swift' -o -name '*.plist' -o -name '*.xml' \) -not -path "$dir/Pods*"`
+files=`find $dir \( -name '*.xib' -o -name '*.json' -o -name '*.storyboard' -o -name '*.[mh]' -o -name '*.pch' -o -name '*.swift' -o -name '*.plist' -o -name '*.xml' \) -not -path "$dir/Pods*"`
 
 checkFile(){
  refer=1
@@ -24,14 +24,20 @@ EOF
  return $refer
 }
 
-imagesets=`find $dir -name '*.imageset'`
-count=`find $dir -name '*.imageset' | wc -l`
+#imagesets=`find $dir -name '*.imageset'`
+#count=`find $dir -name '*.imageset' | wc -l`
+imagesets=`find $dir -name '*.png' -not -path "$dir/Pods*"`
+count=`find $dir -name '*.png' | wc -l`
 noref=''
 i=0
 while read imgset
 do
  match_name=`basename $imgset`
- match_name=${match_name%.imageset}
+ match_name=${match_name%.png}
+ match_name=${match_name%\@2x}
+ if [[ $match_name == *left || $match_name == co_* ]]; then
+  continue
+ fi
  checkFile $match_name
  if [ $? = 1 ]; then
   if [[ $noref = "" ]]; then
