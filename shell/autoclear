@@ -1,0 +1,72 @@
+#!/bin/sh
+
+dir=`pwd`
+
+remove=false
+
+getopts "r" opt
+if [ $opt = "r" ] ; then 
+ remove=true
+fi
+files=`find $dir \( -name '*.xib' -o -name '*.storyboard' -o -name '*.[mh]' -o -name '*.pch' -o -name '*.swift' -o -name '*.plist' -o -name '*.xml' \) -not -path "$dir/Pods*"`
+
+checkFile(){
+ refer=1
+ while read file
+ do
+  if grep -sqh "$1" "$file"; then
+   refer=0
+   break
+  fi
+ done <<EOF
+$files
+EOF
+ return $refer
+}
+
+imagesets=`find $dir -name '*.imageset'`
+count=`find $dir -name '*.imageset' | wc -l`
+noref=''
+i=0
+while read imgset
+do
+ match_name=`basename $imgset`
+ match_name=${match_name%.imageset}
+ checkFile $match_name
+ if [ $? = 1 ]; then
+  if [[ $noref = "" ]]; then
+   noref=$imgset
+   continue
+  fi
+  noref="$imgset\n$noref"
+ fi
+ i=$[$i+1]
+ sch=$[$i*100/count]
+ s=$(printf %-"$[$sch/2]"s "#")
+ printf "进度:[%-50s]%d%%\r" "${s// /#}" $sch
+done <<EOF
+$imagesets
+EOF
+
+printf "%-65s\r"
+if [[ $noref = "" ]]; then
+ echo "检索完成没有找到无引用资源"
+ exit 0
+fi
+echo "-------------以下是没有用到的资源---------------"
+echo "$noref" | while read img
+do
+ echo $img
+done
+echo "-------------------End--------------------------"
+if ! $remove; then
+ exit 0
+fi
+read -p "confirmed to delete(y/n)?" r
+if [ $r = 'y' ]; then
+ echo "$noref" | while read img
+ do
+  rm -rf $img
+ done
+ echo "clear completed"
+fi

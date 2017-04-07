@@ -1,0 +1,38 @@
+#!/bin/sh
+
+upeach()
+{
+ isgit=`find "$1" -type d -depth 1 -name .git`
+ if [ "$isgit"x != x ];then
+  #echo $1 isgit need update
+  cd $1
+  git pull
+  echo '================<<<<<<<<<<<<<<<' $1
+  return
+ fi
+ dirs=`find "$1" -type d -depth 1`
+ if [ "$dirs"x == x ];then
+  return
+ fi
+ while read dir
+ do
+  dirname=${dir##*/}
+  if [[ $dirname == .* || $dirname == *.bak ]] ;then
+   #echo $dirname is hide
+   continue
+  else
+   #echo $dir
+   upeach "$dir"
+  fi
+ done<<EOF
+$dirs
+EOF
+}
+
+#upeach ~/Developer/Learn/TeamTalk-master/mac/TeamTalk/resource
+upeach ~/Developer
+#upeach ~/Developer/stylewe-ios-master
+# cd ~/Developer/stylewe-ios-ng
+# git pull
+# cd ~/Developer/stylewe-ios-master
+# git pull
